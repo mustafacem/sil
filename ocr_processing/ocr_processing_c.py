@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 from PIL import Image
-import pytesseract
+#import pytesseract
 
 
 import openai
@@ -120,26 +120,5 @@ def load_model_and_predict(image_path):
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
-    
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-def tes_ext(uploaded_file):
-    """
-    Perform OCR on an uploaded image using Tesseract with custom configuration.
-
-    Args:
-    uploaded_file (UploadedFile): The uploaded image file.
-
-    Returns:
-    str: The transcribed text from the image.
-    """
-    custom_config = r'--oem 3 --psm 6'
-    
-    # Open the image from the uploaded file
-    image = Image.open(uploaded_file)
-    
-    # Perform OCR using Tesseract
-    raw_text_4 = pytesseract.image_to_string(image, config=custom_config)
-    
-    return raw_text_4
 
 
