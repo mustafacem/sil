@@ -83,10 +83,10 @@ def main():
                 if ocr_method == "Method 1":
                     st.session_state.notes = extract_text_from_image(openai_api_key, image_to_process)
                 elif ocr_method == "Method 2":
-                    ocr_output = tes_ext(image_to_process)
-                    st.session_state.notes = ocr_output
+                    #ocr_output = tes_ext(image_to_process)
+                    st.session_state.notes = extract_text_from_image(openai_api_key, image_to_process)
                 elif ocr_method == "Method 3":
-                    # Add your method 3 implementation here
+                    st.session_state.notes = extract_text_from_image(openai_api_key, image_to_process)
                     pass
 
             if 'notes' in st.session_state:
