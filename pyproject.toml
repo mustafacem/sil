@@ -12,7 +12,7 @@ openai = "0.28"
 requests = "^2.32.3"
 python-docx = "^1.1.2"
 opencv-python = "^4.10.0.84"
-numpy = "^2.0.0"
+numpy = "^1.26.4"
 torch = "^2.3.1"
 torchaudio = "^2.3.1"
 transformers = "^4.42.3"
@@ -24,6 +24,7 @@ tesseract-ocr = "^0.0.1"
 pyheif = "^0.7.1"
 docx = "^0.2.4"
 soundfile = "^0.12.1"
+streamlit = "^1.36.0"
 
 
 [build-system]
