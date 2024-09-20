@@ -1,10 +1,11 @@
 import streamlit as st
-from chat_gpt.chat_gpt_c import * #ask_chatgpt, process_items
-from doc_creation.doc_creation_c import * #create_document, create_excel_with_values, update_excel_file
-from ocr_processing.ocr_processing_c import *
-from whisper_speech_to_text.whisper_speech_to_text_c import transcribe_czech_audio
-
-
+from proposal_droid.chat_gpt.chat_gpt_c import *  # instead of from chat_gpt.chat_gpt_c import *
+from proposal_droid.doc_creation.doc_creation_c import *  # instead of from doc_creation.doc_creation_c import *
+from proposal_droid.ocr_processing.ocr_processing_c import *
+from proposal_droid.whisper_speech_to_text.whisper_speech_to_text_c import transcribe_czech_audio
+from proposal_droid.data_from_web.data_from_web import transcribe_english_youtube, extract_text_from_url
+import os
+from dotenv import load_dotenv
 from io import BytesIO
 from docx import Document
 
@@ -25,7 +26,9 @@ def create_docx(items_dict):
 def main():
     st.title("Proposal Droid_01")
 
-    openai_api_key = st.text_input("Enter your z API key:", type="password", key="api_key_input")
+
+    load_dotenv()
+    openai_api_key =  os.getenv("OPENAI_API_KEY")
     if openai_api_key:
         # Initialize OpenAI API with the provided key
         openai.api_key = openai_api_key
@@ -59,72 +62,56 @@ def main():
     if "use_case_description" not in st.session_state:
         st.session_state.use_case_description = ""
 
-    file_type = st.selectbox("Select the type of notes you want to upload:", ["Image", "Voice Recording"])
-    uploaded_file = st.file_uploader("Upload your file", type=["png", "jpg", "jpeg", "wav", "mp3", "m4a"])
+    file_type = st.selectbox("Select the type of notes you want to upload:", ["Image", "Voice Recording", "YouTube Link", "Website Link"])
+    uploaded_file = None
 
-    if uploaded_file is not None:
-        if file_type == "Image":
-            st.image(uploaded_file, caption="Uploaded Image", use_column_width=True)
-            preprocess = st.checkbox("Preprocess Image")
-            preprocessed_image = uploaded_file
+    # Handling different file types
+    if file_type in ["Image", "Voice Recording"]:
+        uploaded_file = st.file_uploader("Upload your file", type=["png", "jpg", "jpeg", "wav", "mp3", "m4a"])
 
-            if preprocess:
-                preprocessed_image = preprocess_handwritten_image(uploaded_file)
-                if preprocessed_image is not None:
-                    st.image(preprocessed_image, caption="Preprocessed Image", use_column_width=True)
+    if file_type == "Image" and uploaded_file is not None:
+        st.image(uploaded_file, caption="Uploaded Image", use_column_width=True)
+        preprocess = st.checkbox("Preprocess Image")
+        preprocessed_image = uploaded_file
 
-            ocr_method = st.selectbox("Select OCR method:", ["Method 1", "Method 2", "Method 3"])
-            if st.button("Extract Text from Image"):
-                if preprocessed_image is not None:
-                    image_to_process = preprocessed_image
-                else:
-                    image_to_process = uploaded_file
+        if preprocess:
+            preprocessed_image = preprocess_handwritten_image(uploaded_file)
+            if preprocessed_image is not None:
+                st.image(preprocessed_image, caption="Preprocessed Image", use_column_width=True)
 
-                if ocr_method == "Method 1":
-                    st.session_state.notes = extract_text_from_image(openai_api_key, image_to_process)
-                elif ocr_method == "Method 2":
-                    #ocr_output = tes_ext(image_to_process)
-                    st.session_state.notes = extract_text_from_image(openai_api_key, image_to_process)
-                elif ocr_method == "Method 3":
-                    st.session_state.notes = extract_text_from_image(openai_api_key, image_to_process)
-                    pass
+        ocr_method = st.selectbox("Select OCR method:", ["Method 1", "Method 2", "Method 3"])
+        if st.button("Extract Text from Image"):
+            image_to_process = preprocessed_image if preprocess else uploaded_file
+            st.session_state.notes = extract_text_from_image(openai_api_key, image_to_process)
 
-            if 'notes' in st.session_state:
-                use_decoder = st.checkbox("Use decoder prompt?")
-                if use_decoder:
-                    decoder_prompt = st.selectbox("Select decoder prompt:", ["Prompt 1", "Prompt 2", "Prompt 3", "Prompt 4"])
-                    if st.button("Apply Decoder Prompt"):
-                        if decoder_prompt == "Prompt 1":
-                            decoder_prompt = decoder_prompt_1
-                        elif decoder_prompt == "Prompt 2":
-                            decoder_prompt = decoder_prompt_2
-                        elif decoder_prompt == "Prompt 3":
-                            decoder_prompt = decoder_prompt_3
-                        elif decoder_prompt == "Prompt 4":
-                            decoder_prompt = decoder_prompt_4
-                        st.session_state.notes = decoder(st.session_state.notes, decoder_prompt)
-                        st.write(st.session_state.notes)
-                else:
-                    st.write(st.session_state.notes)
-                    # Uncomment and define ocr_method_3 if available
-                    # elif ocr_method == "Method 3":
-                    #     st.session_state.notes = ocr_method_3(image_to_process)
+    elif file_type == "Voice Recording" and uploaded_file is not None:
+        st.audio(uploaded_file, format="audio/wav" if uploaded_file.name.endswith('.wav') else "audio/mp3")
+        language = st.radio("Select the language of the audio:", ("Czech", "English"))
 
-        elif file_type == "Voice Recording":
-            st.audio(uploaded_file, format="audio/wav" if uploaded_file.name.endswith('.wav') else "audio/mp3")
-            language = st.radio("Select the language of the audio:", ("Czech", "English"))
-
-            if st.button("Transcribe Audio"):
+        if st.button("Transcribe Audio"):
+            with st.spinner('Transcribing audio...'):
                 if language == "Czech":
-                    with st.spinner('Transcribing audio...'):
-                        st.session_state.notes = transcribe_czech_audio(uploaded_file)
+                    st.session_state.notes = transcribe_czech_audio(uploaded_file)
                 elif language == "English":
-                    with st.spinner('Transcribing audio...'):
-                        st.session_state.notes = transcribe_english_audio(uploaded_file)
+                    st.session_state.notes = transcribe_english_audio(uploaded_file)
+            st.success("Transcription completed!")
 
-                st.success("Transcription completed!")
+    elif file_type == "YouTube Link":
+        youtube_link = st.text_input("Enter YouTube link:")
+        if youtube_link and st.button("Process YouTube Link"):
+            with st.spinner('Processing YouTube link...'):
+                st.session_state.notes = transcribe_english_youtube(youtube_link)  # You should define this function
+            st.success("YouTube video processed!")
 
-    if st.session_state.notes:
+    elif file_type == "Website Link":
+        website_link = st.text_input("Enter website link:")
+        if website_link and st.button("Extract Text from Website"):
+            with st.spinner('Extracting text...'):
+                st.session_state.notes = extract_text_from_url(website_link)  # You should define this function
+            st.success("Website text extracted!")
+
+    # Handling common notes editing and finalization
+    if "notes" in st.session_state:
         st.write("Transcribed Notes:")
         st.write(st.session_state.notes)
 
@@ -139,6 +126,8 @@ def main():
         if st.button("Use Notes As Is"):
             st.session_state.notes_finalized = True
             st.success("Using transcribed notes as is.")
+
+
 
     if st.session_state.notes_finalized and not st.session_state.use_case_description:
         st.session_state.use_case_description = ask_chatgpt("generate very short use case description from given notes: " + st.session_state.notes)
