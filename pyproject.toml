@@ -23,6 +23,8 @@ pyheif = "^0.7.1"
 docx = "^0.2.4"
 soundfile = "^0.12.1"
 streamlit = "^1.36.0"
+bs4 = "^0.0.2"
+yt-dlp = "^2024.8.6"
 
 
 [build-system]

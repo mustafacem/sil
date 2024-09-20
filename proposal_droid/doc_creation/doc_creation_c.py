@@ -11,9 +11,9 @@ from openpyxl.styles import PatternFill, Font, Alignment
 from docx import Document
 from docx.shared import Inches
 
-from ocr_processing.ocr_processing_c import *
-from chat_gpt.chat_gpt_c import *
-from whisper_speech_to_text.whisper_speech_to_text_c import *
+from proposal_droid.ocr_processing.ocr_processing_c import *
+from proposal_droid.chat_gpt.chat_gpt_c import *
+from proposal_droid.whisper_speech_to_text.whisper_speech_to_text_c import *
 
 import io
 
