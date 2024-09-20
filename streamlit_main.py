@@ -7,6 +7,7 @@ from proposal_droid.data_from_web.data_from_web import transcribe_english_youtub
 import os
 from dotenv import load_dotenv
 from io import BytesIO
+import openai
 from docx import Document
 
 def create_docx(items_dict):
@@ -21,6 +22,7 @@ def create_docx(items_dict):
     doc.save(buffer)
     buffer.seek(0)
     return buffer
+
 
 
 def main():
